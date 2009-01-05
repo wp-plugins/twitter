@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: hogehoge
-Version: 0.1.1
+Version: 0.1.2
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
