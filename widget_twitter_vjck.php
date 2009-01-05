@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: hogehoge
-Version: 0.1.0
+Version: 0.1.1
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -85,6 +85,10 @@ function widget_twitter_vjck_init() {
 					$filedata = substr( $filedata, $spos );
 					$spos = strpos( $filedata, '"' );
 					$filedata = substr( $filedata, 0, $spos );
+
+					// 0.1.1 fixed
+					if( strpos( $filedata, "/" ) == 0 ) $filedata = 'http://twitpic.com' . $filedata;
+
 					return( $filedata );
 				} /* if */
 			} /* if */
