@@ -41,8 +41,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - Initial release
 * Jan 04 2009 - v0.0.2
 - now data will be cached automatically
-* Jan 04 2009 - v0.1.0
+* Jan 05 2009 - v0.1.0
 - Initial public release
+* Jan 05 2009 - v0.1.1
+- bug fix: http://twitpic.com
+* Jan 05 2009 - v0.1.2
+- new support: http://movapic.com (ke-tai hyakkei)
+- support overflow on IE 6
+
 */
 
 
@@ -96,11 +102,38 @@ function widget_twitter_vjck_init() {
 		return( "" );
 	} /* widget_twitter_get_twitterrific_image_url() */
 
+	// 0.1.2 support
+	function widget_twitter_get_ketaihyakkei_image_url( $srcStr ) {
+		$workstr = $srcStr;
+		$spos = strpos( $workstr, 'http://movapic.com' );
+		if( $spos !== FALSE ) {
+			$tmpstr = substr( $workstr, $spos );
+			$filedata = @file_get_contents( $tmpstr );
+			if( $filedata ) {
+//$filedata = mb_convert_encoding( $filedata, "UTF-8", "SJIS" );
+//				$testresult = strpos( $filedata, '<title>TwitPic' );	// keitai-hyakkei - japan domestic thing
+//				if( $testresult !== FALSE ) {
+if( 1 )  {
+					$spos = strpos( $filedata, '<img class="image"' );
+					$filedata = substr( $filedata, $spos );
+					$spos = strpos( $filedata, 'src="' )+5;
+					$filedata = substr( $filedata, $spos );
+					$spos = strpos( $filedata, '"' );
+					$filedata = substr( $filedata, 0, $spos );
+
+					return( $filedata );
+				} /* if */
+			} /* if */
+		} /* if */
+		return( "" );
+	} /* widget_twitter_get_ketaihyakkei_image_url() */
+
 	function widget_twitter_vjck_modify_contents( $srcStr, $option_dispImage ) {
 		$retStr = $srcStr;
 		$regURLs = array(
 			'snipurl' => 'http://snipurl.com',
-			'twitpic' =>'http://twitpic.com'
+			'twitpic' =>'http://twitpic.com',
+			'movapic' => 'http://movapic.com'
 			);
 
 		$spos = strpos( $retStr, 'http://' );
@@ -117,6 +150,9 @@ function widget_twitter_vjck_init() {
 								break;
 							case "twitpic":
 								$imgURL_str = widget_twitter_get_twitterrific_image_url( $retStr );
+								break;
+							case "movapic":
+								$imgURL_str = widget_twitter_get_ketaihyakkei_image_url( $retStr );
 								break;
 						} /* switch */
 					} /* if */
@@ -168,7 +204,7 @@ function widget_twitter_vjck_init() {
 		} /* if */
 
 		if( $twitters ) {
-			$output = '<div id="widget_twitter_vjck"><ul>';
+			$output = '<div id="widget_twitter_vjck" ><ul>';
 
 			if( $displayProfile ) {
 				$userinfo = $twitters->status->user;
@@ -197,7 +233,11 @@ function widget_twitter_vjck_init() {
 			} /* if */
 
 			$local_counter = 0;		// $_twitterCount
-			$output .= '<div id="twitter_time_line" >';
+
+			// fix 0.1.2 - support overflow on IE 6
+			$output .= '<div id="twitter_time_line"  style="width:100%; overflow:hidden;" >';
+//			$output .= '<div id="twitter_time_line"  style="width:100%; overflow:hidden;" >';
+			
 			$dispTimeSourceStartTag = '<div id="twitter_time_source" style="font-size:7pt;color:#888;text-align:right;" >';
 $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var targetTagID = window.document.getElementById(arg); var styleStr = (window.document.documentElement.getAttribute("style") == window.document.documentElement.style) ? targetTagID.style.cssText : targetTagID.getAttribute( "style" ); var nonString = styleStr.match( /display:.*?none;/g ); var nonPos = nonString ? styleStr.indexOf( nonString ) : -1; if( nonPos >= 0 ) { styleStr = styleStr.substring( 0, nonPos ) + styleStr.substring( nonPos + nonString.length, styleStr.length ); styleStr = styleStr + "display:block;"; }else{ var blkString = styleStr.match( /display:.*?block;/g ); var blkPos = blkString ? styleStr.indexOf( blkString ) : -1; if( blkPos >= 0 ) { styleStr = styleStr.substring( 0, blkPos ) + styleStr.substring( blkPos + blkString.length, styleStr.length ); } styleStr = styleStr + "display:none;"; } if( styleStr ) { if( window.document.documentElement.getAttribute("style") == window.document.documentElement.style ) { targetTagID.style.cssText = styleStr; }else{ targetTagID.setAttribute( "style", styleStr); }}}</script>';
 
