@@ -1,4 +1,4 @@
-=== Twitter Widget ===
+=== Twitter ===
 Contributors: V.J.Catkick
 Donate link: http://www.vjcatkick.com/
 Tags: twitter, sidebar
