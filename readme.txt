@@ -6,7 +6,7 @@ Requires at least: 2.5
 Tested up to: 2.7
 Stable tag: 4.3
 
-Another customizable twitter widget for your sidebar.
+Customizable twitter widget for your sidebar.
 
 == Description ==
 
