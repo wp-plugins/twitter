@@ -2,8 +2,8 @@
 /*
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
-Description: hogehoge
-Version: 0.1.2
+Description: Display twitter on your sidebar!
+Version: 0.1.3
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -48,6 +48,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 * Jan 05 2009 - v0.1.2
 - new support: http://movapic.com (ke-tai hyakkei)
 - support overflow on IE 6
+* Jan 15 2009 - v0.1.3
+- bug fix: source link is now open in new window
 
 */
 
@@ -256,7 +258,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 								$output .= date( 'Y/m/d H:s', strtotime( $tw->created_at ) );
 								if( $displaySource ) { $output .= ' by '; }
 							} /* if */
-							if( $displaySource ) { $output .= $tw->source; }
+							if( $displaySource ) { $output .= str_replace( 'href', 'target="_blank" href', $tw->source); }
 							$output .= '</div>';
 						} /* if */
 						$output .= '</li>';
@@ -272,8 +274,8 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 							if( $displaySource ) { $output .= ' '; }
 						} /* if */
 						if( $displaySource ) {
-							$output .= 'from ';
-							$output .= $tw->source;
+							$output .= 'by ';
+							$output .= str_replace( 'href', 'target="_blank" href', $tw->source);
 						} /* if */
 						$output .= '</div>';
 					} /* if */
