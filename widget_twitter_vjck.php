@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - support overflow on IE 6
 * Jan 15 2009 - v0.1.3
 - bug fix: source link is now open in new window
+* Jan 29 2009 - v0.1.4
+- added: date-time format configuration
 
 */
 
@@ -190,6 +192,7 @@ if( 1 )  {
 		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
 		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
 		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
+		$displayTimeFormat = $options['widget_twitter_vjck_option_displayTimeFormat'];		// 0.1.4  'Y/m/d H:s';
 
 		$widget_twitter_vjck_option_cached_time = $options['widget_twitter_vjck_option_cached_time'];
 		$widget_twitter_vjck_option_cached_output = $options['widget_twitter_vjck_option_cached_output'];
@@ -255,7 +258,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 						if( $displayTime || $displaySource ) {
 							$output .= $dispTimeSourceStartTag;
 							if( $displayTime ) {
-								$output .= date( 'Y/m/d H:s', strtotime( $tw->created_at ) );
+								$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) );		// 0.1.4 modified
 								if( $displaySource ) { $output .= ' by '; }
 							} /* if */
 							if( $displaySource ) { $output .= str_replace( 'href', 'target="_blank" href', $tw->source); }
@@ -270,7 +273,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 					if( $displayTime || $displaySource ) {
 						$output .= $dispTimeSourceStartTag;
 						if( $displayTime ) {
-							$output .= date( 'Y/m/d H:s', strtotime( $tw->created_at ) );
+							$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) );		// 0.1.4 modified
 							if( $displaySource ) { $output .= ' '; }
 						} /* if */
 						if( $displaySource ) {
@@ -324,6 +327,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 			$newoptions['widget_twitter_vjck_option_displayReply'] = (boolean)$_POST["widget_twitter_vjck_option_displayReply"];
 			$newoptions['widget_twitter_vjck_option_displayTime'] = (boolean)$_POST["widget_twitter_vjck_option_displayTime"];
 			$newoptions['widget_twitter_vjck_option_displaySource'] = (boolean)$_POST["widget_twitter_vjck_option_displaySource"];
+			$newoptions['widget_twitter_vjck_option_displayTimeFormat'] = $_POST["widget_twitter_vjck_option_displayTimeFormat"];		// 0.1.4 added
 
 			$newoptions['widget_twitter_vjck_option_cached_time'] = 0;
 			$newoptions['widget_twitter_vjck_option_cached_output'] = "";
@@ -336,6 +340,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 		// those are default value
 		if( !$options['widget_twitter_vjck_title'] ) $options['widget_twitter_vjck_title'] = "Twitter";
 		if( !$options['widget_twitter_vjck_option_userid'] ) $options['widget_twitter_vjck_option_userid'] = "12345";
+		if( !$options['widget_twitter_vjck_option_displayTimeFormat'] ) $options['widget_twitter_vjck_option_displayTimeFormat'] = "Y/m/d H:s";		// 0.1.4 added
 
 		$_twitterUserID = $options['widget_twitter_vjck_option_userid'];
 		$_twitterCount = $options['widget_twitter_vjck_option_maxcount'];
@@ -347,6 +352,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
 		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
 		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
+		$displayTimeFormat = $options['widget_twitter_vjck_option_displayTimeFormat'];		// 0.1.4 added
 
 //		$widget_twitter_vjck_option_cached_time = $options['widget_twitter_vjck_option_cached_time'];
 //		$widget_twitter_vjck_option_cached_output = $options['widget_twitter_vjck_option_cached_output'];
@@ -365,7 +371,10 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
         <?php _e('Display image:'); ?> <input id="widget_twitter_vjck_option_displayImage" name="widget_twitter_vjck_option_displayImage" type="checkbox" value="1" <?php if( $displayImage ) echo 'checked';?>/><br />
         <?php _e('Display reply:'); ?> <input id="widget_twitter_vjck_option_displayReply" name="widget_twitter_vjck_option_displayReply" type="checkbox" value="1" <?php if( $displayReply ) echo 'checked';?>/><br />
         <?php _e('Display time:'); ?> <input id="widget_twitter_vjck_option_displayTime" name="widget_twitter_vjck_option_displayTime" type="checkbox" value="1" <?php if( $displayTime ) echo 'checked';?>/><br />
+	    <?php _e('Time Format:'); ?> <input style="width: 100px;" id="widget_twitter_vjck_option_displayTimeFormat" name="widget_twitter_vjck_option_displayTimeFormat" type="text" value="<?php echo $displayTimeFormat; ?>" /><br />
+		
         <?php _e('Display source:'); ?> <input id="widget_twitter_vjck_option_displaySource" name="widget_twitter_vjck_option_displaySource" type="checkbox" value="1" <?php if( $displaySource ) echo 'checked';?>/><br />
+
 
   	    <input type="hidden" id="widget_twitter_vjck_submit" name="widget_twitter_vjck_submit" value="1" />
 
