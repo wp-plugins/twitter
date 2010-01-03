@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 0.1.4
+Version: 0.1.5
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -52,6 +52,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - bug fix: source link is now open in new window
 * Jan 29 2009 - v0.1.4
 - added: date-time format configuration
+* Jan 03 2010 - v0.1.5
+- fixed: twitpic incompatibility fixed.
+- added: display image option (when loaded)
 
 */
 
@@ -87,14 +90,16 @@ function widget_twitter_vjck_init() {
 			$tmpstr = substr( $workstr, $spos );
 			$filedata = @file_get_contents( $tmpstr );
 			if( $filedata ) {
-				$testresult = strpos( $filedata, '<title>TwitPic' );
+				$testresult = strpos( $filedata, '<title>Twitpic' );
+				if( $testresult === FALSE ) $testresult = strpos( $filedata, 'Twitpic</title>' );		// 0.1.5 fixed
 				if( $testresult !== FALSE ) {
-					$spos = strpos( $filedata, '<img id="pic"' );
+					$spos = strpos( $filedata, '<img id="photo-display"' );		// 0.1.5 fixed
 					$filedata = substr( $filedata, $spos );
 					$spos = strpos( $filedata, 'src="' )+5;
 					$filedata = substr( $filedata, $spos );
 					$spos = strpos( $filedata, '"' );
 					$filedata = substr( $filedata, 0, $spos );
+//echo '<!-- [[[[' . $filedata . ']]]] -->';
 
 					// 0.1.1 fixed
 					if( strpos( $filedata, "/" ) == 0 ) $filedata = 'http://twitpic.com' . $filedata;
@@ -132,7 +137,7 @@ if( 1 )  {
 		return( "" );
 	} /* widget_twitter_get_ketaihyakkei_image_url() */
 
-	function widget_twitter_vjck_modify_contents( $srcStr, $option_dispImage ) {
+	function widget_twitter_vjck_modify_contents( $srcStr, $option_dispImage, $image_is_on ) {
 		$retStr = $srcStr;
 		$regURLs = array(
 			'snipurl' => 'http://snipurl.com',
@@ -162,8 +167,10 @@ if( 1 )  {
 					} /* if */
 					$tmp_id_str = substr( $rstr, strrpos( $rstr, "/" ) + 1 );
 					if( $option_dispImage && strlen( $imgURL_str ) > 0 ) {
+						if( !$fstr ) $fstr = 'untitled';	// fixed. 0.1.5
+						$defaultimgstatus = $image_is_on ? 'block' : 'none';
 						$retStr = '<span onclick="flip_twitter_image('."'".$tmp_id_str."'".')" style="cursor:pointer;" >' . $fstr . '</span><br />';
-						$retStr .= '<div id="' . $tmp_id_str . '" style="width:100%;display:none;" ><img src="' . $imgURL_str . '" style="border:1px solid #DDD;margin-left:10px;" width="120px" ></div>';
+						$retStr .= '<div id="' . $tmp_id_str . '" style="width:100%;display:' . $defaultimgstatus . ';" ><img src="' . $imgURL_str . '" style="border:1px solid #DDD;margin-left:10px;" width="120px" ></div>';
 					}else{
 						$retStr = $fstr . '<br />';
 					} /* if else */
@@ -189,6 +196,7 @@ if( 1 )  {
 		$displayLocation = $options['widget_twitter_vjck_option_displayProfileLoc'];;
 		$displayDescription = $options['widget_twitter_vjck_option_displayProfileDesc'];;
 		$displayImage = $options['widget_twitter_vjck_option_displayImage'];
+		$image_on = $options['widget_twitter_vjck_option_image_on'];		// added 0.1.5
 		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
 		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
 		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
@@ -258,7 +266,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 						$output .= '@';
 						$output .= $tw->in_reply_to_screen_name;
 						$output .= '<br />';
-						$output .= widget_twitter_vjck_modify_contents( substr( $tw->text, strpos( $tw->text, ' ' ) + 1 ), $displayImage );
+						$output .= widget_twitter_vjck_modify_contents( substr( $tw->text, strpos( $tw->text, ' ' ) + 1 ), $displayImage, $image_on );
 						if( $displayTime || $displaySource ) {
 							$output .= $dispTimeSourceStartTag;
 							if( $displayTime ) {
@@ -273,7 +281,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 				}else{
 					$local_counter++;
 					$output .= '<li>';
-					$output .= widget_twitter_vjck_modify_contents( $tw->text , $displayImage );
+					$output .= widget_twitter_vjck_modify_contents( $tw->text , $displayImage, $image_on );
 					if( $displayTime || $displaySource ) {
 						$output .= $dispTimeSourceStartTag;
 						if( $displayTime ) {
@@ -328,6 +336,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 			$newoptions['widget_twitter_vjck_option_displayProfileLoc'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfileLoc"];
 			$newoptions['widget_twitter_vjck_option_displayProfileDesc'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfileDesc"];
 			$newoptions['widget_twitter_vjck_option_displayImage'] = (boolean)$_POST["widget_twitter_vjck_option_displayImage"];
+			$newoptions['widget_twitter_vjck_option_image_on'] = (boolean)$_POST["widget_twitter_vjck_option_image_on"];		// added 0.1.5
 			$newoptions['widget_twitter_vjck_option_displayReply'] = (boolean)$_POST["widget_twitter_vjck_option_displayReply"];
 			$newoptions['widget_twitter_vjck_option_displayTime'] = (boolean)$_POST["widget_twitter_vjck_option_displayTime"];
 			$newoptions['widget_twitter_vjck_option_displaySource'] = (boolean)$_POST["widget_twitter_vjck_option_displaySource"];
@@ -353,6 +362,10 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 		$displayLocation = $options['widget_twitter_vjck_option_displayProfileLoc'];;
 		$displayDescription = $options['widget_twitter_vjck_option_displayProfileDesc'];
 		$displayImage = $options['widget_twitter_vjck_option_displayImage'];
+
+		$image_on = $options['widget_twitter_vjck_option_image_on'];	// added 0.1.5
+
+
 		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
 		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
 		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
@@ -373,7 +386,10 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
         &nbsp;&nbsp;<?php _e('Location:'); ?> <input id="widget_twitter_vjck_option_displayProfileLoc" name="widget_twitter_vjck_option_displayProfileLoc" type="checkbox" value="1" <?php if( $displayLocation ) echo 'checked';?>/><br />
         &nbsp;&nbsp;<?php _e('Description:'); ?> <input id="widget_twitter_vjck_option_displayProfileDesc" name="widget_twitter_vjck_option_displayProfileDesc" type="checkbox" value="1" <?php if( $displayDescription ) echo 'checked';?>/><br />
         <?php _e('Display image:'); ?> <input id="widget_twitter_vjck_option_displayImage" name="widget_twitter_vjck_option_displayImage" type="checkbox" value="1" <?php if( $displayImage ) echo 'checked';?>/><br />
-        <?php _e('Display reply:'); ?> <input id="widget_twitter_vjck_option_displayReply" name="widget_twitter_vjck_option_displayReply" type="checkbox" value="1" <?php if( $displayReply ) echo 'checked';?>/><br />
+
+		&nbsp;&nbsp;<?php _e('Display image when loaded:'); ?> <input id="widget_twitter_vjck_option_image_on" name="widget_twitter_vjck_option_image_on" type="checkbox" value="1" <?php if( $image_on ) echo 'checked';?>/><br />
+
+		<?php _e('Display reply:'); ?> <input id="widget_twitter_vjck_option_displayReply" name="widget_twitter_vjck_option_displayReply" type="checkbox" value="1" <?php if( $displayReply ) echo 'checked';?>/><br />
         <?php _e('Display time:'); ?> <input id="widget_twitter_vjck_option_displayTime" name="widget_twitter_vjck_option_displayTime" type="checkbox" value="1" <?php if( $displayTime ) echo 'checked';?>/><br />
 	    <?php _e('Time Format:'); ?> <input style="width: 100px;" id="widget_twitter_vjck_option_displayTimeFormat" name="widget_twitter_vjck_option_displayTimeFormat" type="text" value="<?php echo $displayTimeFormat; ?>" /><br />
 		
