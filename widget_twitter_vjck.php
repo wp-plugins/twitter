@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 0.1.5
+Version: 0.1.6
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -55,6 +55,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 * Jan 03 2010 - v0.1.5
 - fixed: twitpic incompatibility fixed.
 - added: display image option (when loaded)
+* Jan 03 2010 - v0.1.6
+- fixed: url position related bug
+- added: hashtag link
 
 */
 
@@ -70,7 +73,7 @@ function widget_twitter_vjck_init() {
 	function widget_twitter_get_twinkle_image_url( $srcStr ) {
 		$workstr = $srcStr;
 		$spos = strpos( $workstr, 'http://snipurl.com' );
-		if( $spos ) {
+		if( $spos !== false ) {		// 0.1.6 fixed
 			$tmpstr = substr( $workstr, $spos );
 			$filedata = @simplexml_load_file( $tmpstr );
 			if( $filedata ) {
@@ -86,7 +89,7 @@ function widget_twitter_vjck_init() {
 	function widget_twitter_get_twitterrific_image_url( $srcStr ) {
 		$workstr = $srcStr;
 		$spos = strpos( $workstr, 'http://twitpic.com' );
-		if( $spos ) {
+		if( $spos !== false ) {		// 0.1.6 fixed
 			$tmpstr = substr( $workstr, $spos );
 			$filedata = @file_get_contents( $tmpstr );
 			if( $filedata ) {
@@ -137,6 +140,25 @@ if( 1 )  {
 		return( "" );
 	} /* widget_twitter_get_ketaihyakkei_image_url() */
 
+	// added 0.1.6
+	function widget_twitter_vjck_hashed_link( $srcStr ) {
+		$retStr = $srcStr;
+
+		if( preg_match_all( '/#[-_.!~*a-zA-Z0-9;\/?:@&=+$,%]+/s', $srcStr, $matches ) ) {
+			$match = $matches[0];
+
+			foreach( $match as $m ) {
+				$tagStr = $m;
+				$tagLink = 'http://twitter.com/search?q=' . str_replace( '#', '%23', $tagStr );
+				$tagLinkHtml = '<a href="' . $tagLink . '" target="_blank" >' . $tagStr . '</a>';
+
+				$retStr = preg_replace( '/' . $tagStr . '/s', $tagLinkHtml, $retStr );
+			} /* foreach */
+		} /* if */
+
+		return( $retStr );
+	} /* widget_twitter_vjck_hashed_link() */
+
 	function widget_twitter_vjck_modify_contents( $srcStr, $option_dispImage, $image_is_on ) {
 		$retStr = $srcStr;
 		$regURLs = array(
@@ -147,30 +169,40 @@ if( 1 )  {
 
 		$spos = strpos( $retStr, 'http://' );
 		if( $spos !== FALSE ) {
-			$fstr = substr( $retStr, 0, $spos );
-			$rstr = substr( $retStr, $spos );
+
+//			$fstr = substr( $retStr, 0, $spos );
+//			$rstr = substr( $retStr, $spos );
+
+			// 0.1.6
+			preg_match( '/s?https?:\/\/[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#]+/s' , $retStr, $matches );
+			$rstr = $matches[0];
+			$matches = preg_replace( '/s?https?:\/\/[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#]+/s' , '', $retStr );
+			$fstr = $matches;
+
 			foreach( $regURLs as $key => $regurl ) {
 				if( strpos( $retStr, $regurl) !== FALSE ) {
 					$imgURL_str = "";
 					if( $option_dispImage ) {
 						switch( $key ) {
 							case "snipurl":
-								$imgURL_str = widget_twitter_get_twinkle_image_url( $retStr );
+								$imgURL_str = widget_twitter_get_twinkle_image_url( $rstr );	// 0.1.6 fixed	(was $retStr not $rstr )
 								break;
 							case "twitpic":
-								$imgURL_str = widget_twitter_get_twitterrific_image_url( $retStr );
+								$imgURL_str = widget_twitter_get_twitterrific_image_url( $rstr );	// 0.1.6 fixed
 								break;
 							case "movapic":
-								$imgURL_str = widget_twitter_get_ketaihyakkei_image_url( $retStr );
+								$imgURL_str = widget_twitter_get_ketaihyakkei_image_url( $rstr );	// 0.1.6 fixed
 								break;
 						} /* switch */
 					} /* if */
-					$tmp_id_str = substr( $rstr, strrpos( $rstr, "/" ) + 1 );
+//					$tmp_id_str = substr( $rstr, strrpos( $rstr, "/" ) + 1 );		// fixed 0.1.6
+					$tmp_id_str = 'vjck_twitter_img_' . rand( 1000, 9999 );
+
 					if( $option_dispImage && strlen( $imgURL_str ) > 0 ) {
 						if( !$fstr ) $fstr = 'untitled';	// fixed. 0.1.5
-						$defaultimgstatus = $image_is_on ? 'block' : 'none';
+						$defaultimgstatus = $image_is_on ? 'block' : 'none';		// added. 0.1.5
 						$retStr = '<span onclick="flip_twitter_image('."'".$tmp_id_str."'".')" style="cursor:pointer;" >' . $fstr . '</span><br />';
-						$retStr .= '<div id="' . $tmp_id_str . '" style="width:100%;display:' . $defaultimgstatus . ';" ><img src="' . $imgURL_str . '" style="border:1px solid #DDD;margin-left:10px;" width="120px" ></div>';
+						$retStr .= '<div id="' . $tmp_id_str . '" style="width:100%;display:' . $defaultimgstatus . ';" ><img src="' . $imgURL_str . '" style="border:1px solid silver;margin-left:10px;" width="120px" ></div>';
 					}else{
 						$retStr = $fstr . '<br />';
 					} /* if else */
@@ -178,9 +210,14 @@ if( 1 )  {
 					break;
 				} /* if */
 			} /* foreach */
+
 			if( strlen( $imgURL_str ) == 0 ) { $retStr = $fstr . '<br />'; }
 			$retStr .= '<a href="' . $rstr . '" target="_blank" >' . $rstr . '</a>';
+
 		} /* if */
+
+		$retStr = widget_twitter_vjck_hashed_link( $retStr );		// added. 0.1.6
+
 		return( $retStr );
 	} /* widget_twitter_vjck_modify_contents() */
 
