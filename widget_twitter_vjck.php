@@ -58,6 +58,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 * Jan 03 2010 - v0.1.6
 - fixed: url position related bug
 - added: hashtag link
+* Jan 14 2010 - v0.1.7
+- added: brightkite supported
 
 */
 
@@ -69,6 +71,27 @@ function widget_twitter_vjck_init() {
 		echo 'PHP 5.1 or later requires: no simplexml_load_file()';
 		return;
 	} /* if */
+
+	// 0.1.7 added brightkite
+	function widget_twitter_get_brightkite_image_url( $srcStr ) {
+		$workstr = $srcStr;
+		$spos = strpos( $workstr, 'http://bkite.com' );
+
+		if( $spos !== false ) {
+			$tmpstr = substr( $workstr, $spos );
+//			$filedata = @simplexml_load_file( $tmpstr );
+			$filedata = @file_get_contents( $tmpstr );
+			if( $filedata ) {
+				if( preg_match( '/div\s*class="photo"\s*align[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#].+.(?:jpe?g)/is', $filedata, $matches ) ) {
+					if( preg_match( '/src=\"[-_.!~*()a-z0-9;\/?@&=+$,%#].+.(?:jpe?g)/is', $matches[0], $m2s ) ) {
+						$filedata = preg_replace( '/src=\"/is', '', $m2s[0] );
+						return( $filedata );
+					} /* if */
+				} /* if */
+			} /* if */
+		} /* if */
+		return( "" );
+	} /* widget_twitter_get_brightkite_image_url() */
 
 	function widget_twitter_get_twinkle_image_url( $srcStr ) {
 		$workstr = $srcStr;
@@ -164,7 +187,8 @@ if( 1 )  {
 		$regURLs = array(
 			'snipurl' => 'http://snipurl.com',
 			'twitpic' =>'http://twitpic.com',
-			'movapic' => 'http://movapic.com'
+			'movapic' => 'http://movapic.com',
+			'brightkite' => 'http://bkite.com'					// brightkite added 0.1.7
 			);
 
 		$spos = strpos( $retStr, 'http://' );
@@ -193,6 +217,8 @@ if( 1 )  {
 							case "movapic":
 								$imgURL_str = widget_twitter_get_ketaihyakkei_image_url( $rstr );	// 0.1.6 fixed
 								break;
+							case "brightkite":
+								$imgURL_str = widget_twitter_get_brightkite_image_url( $rstr );		// 0.1.7 added
 						} /* switch */
 					} /* if */
 //					$tmp_id_str = substr( $rstr, strrpos( $rstr, "/" ) + 1 );		// fixed 0.1.6
