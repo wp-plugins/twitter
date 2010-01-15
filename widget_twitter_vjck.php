@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 0.1.7
+Version: 0.1.8
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -60,6 +60,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - added: hashtag link
 * Jan 14 2010 - v0.1.7
 - added: brightkite supported
+* Jan 15 2010 - v0.1.8
+- fixed: timezone issue
 
 */
 
@@ -312,14 +314,9 @@ if( 1 )  {
 
 			// fix 0.1.2 - support overflow on IE 6
 			$output .= '<div id="twitter_time_line"  style="width:100%; overflow:hidden;" >';
-//			$output .= '<div id="twitter_time_line"  style="width:100%; overflow:hidden;" >';
 			
 			$dispTimeSourceStartTag = '<div id="twitter_time_source" style="font-size:7pt;color:#888;text-align:right;" >';
 $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var targetTagID = window.document.getElementById(arg); var styleStr = (window.document.documentElement.getAttribute("style") == window.document.documentElement.style) ? targetTagID.style.cssText : targetTagID.getAttribute( "style" ); var nonString = styleStr.match( /display:.*?none;/g ); var nonPos = nonString ? styleStr.indexOf( nonString ) : -1; if( nonPos >= 0 ) { styleStr = styleStr.substring( 0, nonPos ) + styleStr.substring( nonPos + nonString.length, styleStr.length ); styleStr = styleStr + "display:block;"; }else{ var blkString = styleStr.match( /display:.*?block;/g ); var blkPos = blkString ? styleStr.indexOf( blkString ) : -1; if( blkPos >= 0 ) { styleStr = styleStr.substring( 0, blkPos ) + styleStr.substring( blkPos + blkString.length, styleStr.length ); } styleStr = styleStr + "display:none;"; } if( styleStr ) { if( window.document.documentElement.getAttribute("style") == window.document.documentElement.style ) { targetTagID.style.cssText = styleStr; }else{ targetTagID.setAttribute( "style", styleStr); }}}</script>';
-
-//			PHP 5.0 or higher
-//			if the time stamp does not display correct time zone, try this code below (removing two '/' at beginning of the line)
-//			date_default_timezone_set( ‘America/Los_Angeles’ );
 
 			foreach( $twitters as $tw ) {
 				if( strlen( $tw->in_reply_to_screen_name ) ) {
@@ -333,7 +330,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 						if( $displayTime || $displaySource ) {
 							$output .= $dispTimeSourceStartTag;
 							if( $displayTime ) {
-								$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) );		// 0.1.4 modified
+								$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) + $tw->user->utc_offset[0] );		// 0.1.4 modified -> 0.1.8 fixed
 								if( $displaySource ) { $output .= ' by '; }
 							} /* if */
 							if( $displaySource ) { $output .= str_replace( 'href', 'target="_blank" href', $tw->source); }
@@ -348,7 +345,7 @@ $output .= '<script type="text/javascript">function flip_twitter_image(arg) {var
 					if( $displayTime || $displaySource ) {
 						$output .= $dispTimeSourceStartTag;
 						if( $displayTime ) {
-							$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) );		// 0.1.4 modified
+							$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) + $tw->user->utc_offset[0] );		// 0.1.4 modified -> 0.1.8 fixed
 							if( $displaySource ) { $output .= ' '; }
 						} /* if */
 						if( $displaySource ) {
