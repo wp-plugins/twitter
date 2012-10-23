@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 0.1.8
+Version: 0.1.9
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -62,6 +62,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - added: brightkite supported
 * Jan 15 2010 - v0.1.8
 - fixed: timezone issue
+* Oct 23 2012 – v0.1.9
+- quick fixed: support twitter api change – 10/15/2012
+
 
 */
 
