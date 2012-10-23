@@ -277,7 +277,9 @@ if( 1 )  {
 		$cached_time = $options['widget_twitter_vjck_option_cached_time'];
 		if( $cached_time + 300 < time() ) {		// once at 5 min.
 			//$_xmlfilestr = 'http://twitter.com/statuses/user_timeline/' . $_twitterUserID . '.xml?count=' . $_twitterCount;
-			$_xmlfilestr = 'http://twitter.com/statuses/user_timeline/' . $_twitterUserID . '.xml?count=150';
+			//$_xmlfilestr = 'http://twitter.com/statuses/user_timeline/' . $_twitterUserID . '.xml?count=150';
+			$_xmlfilestr = 'https://api.twitter.com/1/statuses/user_timeline.xml?screen_name=' . $_twitterUserID . '&count=150';		// 0.1.9 - OCT 15 2012 twitter api change
+
 			$twitters = @simplexml_load_file( $_xmlfilestr );
 		} /* if */
 
