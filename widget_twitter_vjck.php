@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 2.0.0
+Version: 2.0.1
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -67,6 +67,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 * Jul 11 2013 – v2.0.0
 - all new code
+* Jul 11 2013 – v2.0.0\1
+- zip file fix
 
 
 */
