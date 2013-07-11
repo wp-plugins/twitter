@@ -3,7 +3,7 @@
 Plugin Name:  Widget Twitter VJCK
 Plugin URI: http://www.vjcatkick.com/?page_id=5475
 Description: Display twitter on your sidebar!
-Version: 0.1.9
+Version: 2.0.0
 Author: V.J.Catkick
 Author URI: http://www.vjcatkick.com/
 */
@@ -65,411 +65,436 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 * Oct 23 2012 – v0.1.9
 - quick fixed: support twitter api change – 10/15/2012
 
+* Jul 11 2013 – v2.0.0
+- all new code
+
 
 */
 
+?>
+<style type="text/css" >
+<!--
+.w_tweet_tweet_wrap {
+	font-size: 0.8em;
+	margin: 5px 0px 20px 0px;
+	padding: 5px 0px 15px 0px;
+	line-height: 1.3em;
+	clear: both;
+	}
+
+.w_tweet_tweet_text {
+	padding: 0px 0px 2px 0px;
+	border-bottom: 1px solid #f0f0f0;
+	}
+
+.w_tweet_tweet_time_tweet {
+	float: left;
+	margin-top: 3px;
+	font-size: 0.9em;
+	color: gray;
+	}
+
+.w_tweet_tweet_source {
+	float: right;
+	margin-top: 3px;
+	font-size: 0.9em;
+	text-align: right;
+	}
+
+.w_tweet_tweet_status {
+	font-size: 0.8em;
+	text-align: right;
+	border-top: 1px solid lightgray;
+	padding: 2px 0px;
+	margin-top: 1.0em;
+	color: lightgray;
+	}
+
+.w_tweet_tweet_photobox {
+	float: left;
+	border-radius: 3px;
+	overflow: hidden;
+	}
+
+.w_tweet_tweet_photobox img {
+	border: 1px solid lightgray;
+	margin-right: 5px;
+	margin-bottom: 5px;
+	}
+
+
+
+.w_tweet_tweet_profile_wrap {
+	margin: 10px 0px;
+	border-bottom: 1px solid lightgray;
+	}
+
+.w_tweet_tweet_profile_icon {
+	width: 48px;
+	height: 48px;
+	border: 1px solid lightgray;
+	border-radius: 3px;
+	overflow: hidden;
+	float: left;
+	margin-right: 8px;
+	margin-bottom: 4px;
+	}
+
+.w_tweet_tweet_profile_username {
+	font-size: 1.0em;
+	font-weight: bold;
+	}
+
+.w_tweet_tweet_profile_location {
+	font-size: 0.9em;
+	margin-bottom: 4px;
+	}
+
+.w_tweet_tweet_profile_description {
+	font-size: 0.9em;
+	}
+
+.w_tweet_tweet_profile_meta_wrap {
+	clear: both;
+	}
+
+.w_tweet_tweet_profile_meta {
+	font-size: 0.8em;
+	color: gray;
+	text-align: right;
+	padding-bottom: 3px;
+	}
+-->
+</style>
+<?php
+
+
+define( 'W_TWITTER_OPTION', 'widget_twitter_vjck_2' );
+define( 'W_TWITTER_CACHE', 'widget_twitter_vjck_cache' );
+
+/*
+ * __check_php_version()
+ * with library limitation, this plugin requires PHP version 5.3.0 or higher
+ *
+ *
+ */
+
+function __check_php_version() {
+	$version = phpversion();
+	$vernum = explode( '.', $version );
+
+	if( $vernum[ 0 ] < 5 ) return false;
+	else if( $vernum[ 1 ] < 3 ) return false;
+	return true;
+} /* __check_php_version */
+
+
+
+
+function __get_twitter_access_info( $kind ) {
+	$output = '';
+
+	$options = get_option( W_TWITTER_OPTION );
+	$op_consumer_key = $options[ 'op_consumer_key' ];
+	$op_consumer_secret = $options[ 'op_consumer_secret' ];
+	$op_access_token = $options[ 'op_access_token' ];
+	$op_access_secret = $options[ 'op_access_secret' ];
+
+	switch( $kind ) {
+		case w_twitter_consumer_key:
+			$output = 'Qqp7yIjWANUyfSby3avbDQ';
+			$output = $op_consumer_key;
+			break;
+		case w_twitter_consumer_secret:
+			$output = 'J3UEcXgPLLJpXCeEAEwrFZxHUXNTGx9R4BGpcSfL0';
+			$output = $op_consumer_secret;
+			break;
+		case w_twitter_access_token:
+			$output = '4972251-a8ttk9oGoD7qLhmoxiKddEi1UqUKIwuOrZSgZeGstU';
+			$output = $op_access_token;
+			break;
+		case w_twitter_access_secret:
+			$output = 'XNz05Upb5F52uHM0eldcb7Q9RLRhiPgf8OZXrgIQ8';
+			$output = $op_access_secret;
+			break;
+	} /* switch */
+
+	return $output;
+}
+
+
 
 function widget_twitter_vjck_init() {
-	if ( !function_exists('register_sidebar_widget') )
+	if( !function_exists( 'register_sidebar_widget' ) ) {
 		return;
-	if ( !function_exists('simplexml_load_file') ) {
-		echo 'PHP 5.1 or later requires: no simplexml_load_file()';
+	} /* if */
+	if( !__check_php_version() ) {
+		echo '<div style="width: 100%; text-align: center; background-color: pink; padding: 10px; font-size: 1.0em;" >' . '[twitter] error: PHP 5.3.0 or later requires' . '</div>';
 		return;
 	} /* if */
 
-	// 0.1.7 added brightkite
-	function widget_twitter_get_brightkite_image_url( $srcStr ) {
-		$workstr = $srcStr;
-		$spos = strpos( $workstr, 'http://bkite.com' );
-
-		if( $spos !== false ) {
-			$tmpstr = substr( $workstr, $spos );
-//			$filedata = @simplexml_load_file( $tmpstr );
-			$filedata = @file_get_contents( $tmpstr );
-			if( $filedata ) {
-				if( preg_match( '/div\s*class="photo"\s*align[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#].+.(?:jpe?g)/is', $filedata, $matches ) ) {
-					if( preg_match( '/src=\"[-_.!~*()a-z0-9;\/?@&=+$,%#].+.(?:jpe?g)/is', $matches[0], $m2s ) ) {
-						$filedata = preg_replace( '/src=\"/is', '', $m2s[0] );
-						return( $filedata );
-					} /* if */
-				} /* if */
-			} /* if */
-		} /* if */
-		return( "" );
-	} /* widget_twitter_get_brightkite_image_url() */
-
-	function widget_twitter_get_twinkle_image_url( $srcStr ) {
-		$workstr = $srcStr;
-		$spos = strpos( $workstr, 'http://snipurl.com' );
-		if( $spos !== false ) {		// 0.1.6 fixed
-			$tmpstr = substr( $workstr, $spos );
-			$filedata = @simplexml_load_file( $tmpstr );
-			if( $filedata ) {
-				$pgTitle = $filedata->head->title;
-				if( strcmp( $pgTitle, "TwinkleShots" ) == 0 ) {
-					return( $filedata->body->div[1]->img[src] );
-				} /* if */
-			} /* if */
-		} /* if */
-		return( "" );
-	} /* widget_twitter_get_twinkle_image_url() */
-
-	function widget_twitter_get_twitterrific_image_url( $srcStr ) {
-		$workstr = $srcStr;
-		$spos = strpos( $workstr, 'http://twitpic.com' );
-		if( $spos !== false ) {		// 0.1.6 fixed
-			$tmpstr = substr( $workstr, $spos );
-			$filedata = @file_get_contents( $tmpstr );
-			if( $filedata ) {
-				$testresult = strpos( $filedata, '<title>Twitpic' );
-				if( $testresult === FALSE ) $testresult = strpos( $filedata, 'Twitpic</title>' );		// 0.1.5 fixed
-				if( $testresult !== FALSE ) {
-					$spos = strpos( $filedata, '<img id="photo-display"' );		// 0.1.5 fixed
-					$filedata = substr( $filedata, $spos );
-					$spos = strpos( $filedata, 'src="' )+5;
-					$filedata = substr( $filedata, $spos );
-					$spos = strpos( $filedata, '"' );
-					$filedata = substr( $filedata, 0, $spos );
-//echo '<!-- [[[[' . $filedata . ']]]] -->';
-
-					// 0.1.1 fixed
-					if( strpos( $filedata, "/" ) == 0 ) $filedata = 'http://twitpic.com' . $filedata;
-
-					return( $filedata );
-				} /* if */
-			} /* if */
-		} /* if */
-		return( "" );
-	} /* widget_twitter_get_twitterrific_image_url() */
-
-	// 0.1.2 support
-	function widget_twitter_get_ketaihyakkei_image_url( $srcStr ) {
-		$workstr = $srcStr;
-		$spos = strpos( $workstr, 'http://movapic.com' );
-		if( $spos !== FALSE ) {
-			$tmpstr = substr( $workstr, $spos );
-			$filedata = @file_get_contents( $tmpstr );
-			if( $filedata ) {
-//$filedata = mb_convert_encoding( $filedata, "UTF-8", "SJIS" );
-//				$testresult = strpos( $filedata, '<title>TwitPic' );	// keitai-hyakkei - japan domestic thing
-//				if( $testresult !== FALSE ) {
-if( 1 )  {
-					$spos = strpos( $filedata, '<img class="image"' );
-					$filedata = substr( $filedata, $spos );
-					$spos = strpos( $filedata, 'src="' )+5;
-					$filedata = substr( $filedata, $spos );
-					$spos = strpos( $filedata, '"' );
-					$filedata = substr( $filedata, 0, $spos );
-
-					return( $filedata );
-				} /* if */
-			} /* if */
-		} /* if */
-		return( "" );
-	} /* widget_twitter_get_ketaihyakkei_image_url() */
-
-	// added 0.1.6
-	function widget_twitter_vjck_hashed_link( $srcStr ) {
-		$retStr = $srcStr;
-
-		if( preg_match_all( '/#[-_.!~*a-zA-Z0-9;\/?:@&=+$,%]+/s', $srcStr, $matches ) ) {
-			$match = $matches[0];
-
-			foreach( $match as $m ) {
-				$tagStr = $m;
-				$tagLink = 'http://twitter.com/search?q=' . str_replace( '#', '%23', $tagStr );
-				$tagLinkHtml = '<a href="' . $tagLink . '" target="_blank" >' . $tagStr . '</a>';
-
-				$retStr = preg_replace( '/' . $tagStr . '/s', $tagLinkHtml, $retStr );
-			} /* foreach */
-		} /* if */
-
-		return( $retStr );
-	} /* widget_twitter_vjck_hashed_link() */
-
-	function widget_twitter_vjck_modify_contents( $srcStr, $option_dispImage, $image_is_on ) {
-		$retStr = $srcStr;
-		$regURLs = array(
-			'snipurl' => 'http://snipurl.com',
-			'twitpic' =>'http://twitpic.com',
-			'movapic' => 'http://movapic.com',
-			'brightkite' => 'http://bkite.com'					// brightkite added 0.1.7
-			);
-
-		$spos = strpos( $retStr, 'http://' );
-		if( $spos !== FALSE ) {
-
-//			$fstr = substr( $retStr, 0, $spos );
-//			$rstr = substr( $retStr, $spos );
-
-			// 0.1.6
-			preg_match( '/s?https?:\/\/[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#]+/s' , $retStr, $matches );
-			$rstr = $matches[0];
-			$matches = preg_replace( '/s?https?:\/\/[-_.!~*a-zA-Z0-9;\/?:@&=+$,%#]+/s' , '', $retStr );
-			$fstr = $matches;
-
-			foreach( $regURLs as $key => $regurl ) {
-				if( strpos( $retStr, $regurl) !== FALSE ) {
-					$imgURL_str = "";
-					if( $option_dispImage ) {
-						switch( $key ) {
-							case "snipurl":
-								$imgURL_str = widget_twitter_get_twinkle_image_url( $rstr );	// 0.1.6 fixed	(was $retStr not $rstr )
-								break;
-							case "twitpic":
-								$imgURL_str = widget_twitter_get_twitterrific_image_url( $rstr );	// 0.1.6 fixed
-								break;
-							case "movapic":
-								$imgURL_str = widget_twitter_get_ketaihyakkei_image_url( $rstr );	// 0.1.6 fixed
-								break;
-							case "brightkite":
-								$imgURL_str = widget_twitter_get_brightkite_image_url( $rstr );		// 0.1.7 added
-						} /* switch */
-					} /* if */
-//					$tmp_id_str = substr( $rstr, strrpos( $rstr, "/" ) + 1 );		// fixed 0.1.6
-					$tmp_id_str = 'vjck_twitter_img_' . rand( 1000, 9999 );
-
-					if( $option_dispImage && strlen( $imgURL_str ) > 0 ) {
-						if( !$fstr ) $fstr = 'untitled';	// fixed. 0.1.5
-						$defaultimgstatus = $image_is_on ? 'block' : 'none';		// added. 0.1.5
-						$retStr = '<span onclick="flip_twitter_image('."'".$tmp_id_str."'".')" style="cursor:pointer;" >' . $fstr . '</span><br />';
-						$retStr .= '<div id="' . $tmp_id_str . '" style="width:100%;display:' . $defaultimgstatus . ';" ><img src="' . $imgURL_str . '" style="border:1px solid silver;margin-left:10px;" width="120px" ></div>';
-					}else{
-						$retStr = $fstr . '<br />';
-					} /* if else */
-//					$retStr .= '<a href="' . $rstr . '" target="_blank" >' . $rstr . '</a>';
-					break;
-				} /* if */
-			} /* foreach */
-
-			if( strlen( $imgURL_str ) == 0 ) { $retStr = $fstr . '<br />'; }
-			$retStr .= '<a href="' . $rstr . '" target="_blank" >' . $rstr . '</a>';
-
-		} /* if */
-
-		$retStr = widget_twitter_vjck_hashed_link( $retStr );		// added. 0.1.6
-
-		return( $retStr );
-	} /* widget_twitter_vjck_modify_contents() */
+	require 'tmhOAuthHandle.php';
 
 	function widget_twitter_vjck( $args ) {
-		extract($args);
-
-		$options = get_option('widget_twitter_vjck');
-		$title = $options['widget_twitter_vjck_title'];
-		$_twitterUserID = $options['widget_twitter_vjck_option_userid'];
-		$_twitterCount = $options['widget_twitter_vjck_option_maxcount'];
-		$displayProfile = $options['widget_twitter_vjck_option_displayProfile'];
-		$displayProfileImg = $options['widget_twitter_vjck_option_displayProfileImg'];
-		$displayLocation = $options['widget_twitter_vjck_option_displayProfileLoc'];;
-		$displayDescription = $options['widget_twitter_vjck_option_displayProfileDesc'];;
-		$displayImage = $options['widget_twitter_vjck_option_displayImage'];
-		$image_on = $options['widget_twitter_vjck_option_image_on'];		// added 0.1.5
-		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
-		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
-		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
-		$displayTimeFormat = $options['widget_twitter_vjck_option_displayTimeFormat'];		// 0.1.4  'Y/m/d H:s';
-
-		$widget_twitter_vjck_option_cached_time = $options['widget_twitter_vjck_option_cached_time'];
-		$widget_twitter_vjck_option_cached_output = $options['widget_twitter_vjck_option_cached_output'];
+		extract( $args );
+		$output = '';
 
 
-		// section main logic from here 
+		$options = get_option( W_TWITTER_OPTION );
 
-		$twitters = false;
-		$cached_time = $options['widget_twitter_vjck_option_cached_time'];
-		if( $cached_time + 300 < time() ) {		// once at 5 min.
-			//$_xmlfilestr = 'http://twitter.com/statuses/user_timeline/' . $_twitterUserID . '.xml?count=' . $_twitterCount;
-			//$_xmlfilestr = 'http://twitter.com/statuses/user_timeline/' . $_twitterUserID . '.xml?count=150';
-			$_xmlfilestr = 'https://api.twitter.com/1/statuses/user_timeline.xml?screen_name=' . $_twitterUserID . '&count=150';		// 0.1.9 - OCT 15 2012 twitter api change
+		/* option default value */
+		$op_widget_title = $options[ 'op_widget_title' ] ? $options[ 'op_widget_title' ] : 'Twitter';
 
-			$twitters = @simplexml_load_file( $_xmlfilestr );
-		} /* if */
+		$op_timezone_offset = $options[ 'op_timezone_offset' ] ? $options[ 'op_timezone_offset' ] : 9;
+		$op_time_format = $options[ 'op_time_format' ] ? $options[ 'op_time_format' ] : 'M j Y - G:i';
+		$op_exclude_reply = $options[ 'op_exclude_reply' ] ? true : false;
+		$op_max_display = $options[ 'op_max_display' ] ? $options[ 'op_max_display' ] : 10;
 
-		if( $twitters ) {
-			$output = '<div id="widget_twitter_vjck" ><ul>';
 
-			if( $displayProfile ) {
-				$userinfo = $twitters->status->user;
-				$output .= '<div id="twitter_profile" style="height: 52px;" >';
-				if( $displayProfileImg ) {
-					$output .= '<div class="twitter_img_box" style="float:left; height:48px; margin-right:1em;margin-left:10px;" ><img border="0" src="';
-					$output .= $userinfo->profile_image_url;
-					$output .= '" /></div>';
-				} /* if */
-				$output .= '<div class="twitter_name_box" ><a href="http://twitter.com/';
-				$output .= $userinfo->screen_name;
-				$output .= '" target="_blank">';
-				$output .= $userinfo->name;
-				$output .= '</a> </div>';
-				if( strlen( $userinfo->location ) && $displayLocation ) {
-					$output .= '<div class="twitter_location_box" >';
-					$output .= $userinfo->location;
-					$output .= '</div>';
-				} /* if */
-				$output .= '</div>';
-				$output .= '<div class="twitter_description" style="padding-bottom:2px; border-bottom:1px dotted #DDD;" >';
-				if( strlen( $userinfo->description ) && $displayDescription) {
-					$output .= $userinfo->description;
-				} /* if */
-				$output .= '</div>';
+		$tmhOAuth = new tmhOAuthExample();
+		$code = $tmhOAuth->user_request( array( 'url' => $tmhOAuth->url( '1.1/account/verify_credentials' ) ) );
+		if( $code == 200 ) {
+			$data = json_decode( $tmhOAuth->response[ 'response' ], true );
+			if( isset( $data[ 'status' ] ) ) {
+				$code = $tmhOAuth->user_request( array(	'url' => $tmhOAuth->url( '1.1/statuses/user_timeline' ),
+														'user_id' => $data[ 'id' ],
+														'count' => $op_max_display,
+														'include_rts' => 1,
+												));
+				if( $code == 200 ) $tweet = json_decode( $tmhOAuth->response[ 'response' ], true );
+				else $output .= '<!-- error - request user timeline: ' . $code . '-->';
+
+				$new_tweets_cache = urlencode( json_encode( $tweet ) );
+				update_option( W_TWITTER_CACHE, $new_tweets_cache );
 			} /* if */
-
-			$local_counter = 0;		// $_twitterCount
-
-			// fix 0.1.2 - support overflow on IE 6
-			$output .= '<div id="twitter_time_line"  style="width:100%; overflow:hidden;" >';
-			
-			$dispTimeSourceStartTag = '<div id="twitter_time_source" style="font-size:7pt;color:#888;text-align:right;" >';
-$output .= '<script type="text/javascript">function flip_twitter_image(arg) {var targetTagID = window.document.getElementById(arg); var styleStr = (window.document.documentElement.getAttribute("style") == window.document.documentElement.style) ? targetTagID.style.cssText : targetTagID.getAttribute( "style" ); var nonString = styleStr.match( /display:.*?none;/g ); var nonPos = nonString ? styleStr.indexOf( nonString ) : -1; if( nonPos >= 0 ) { styleStr = styleStr.substring( 0, nonPos ) + styleStr.substring( nonPos + nonString.length, styleStr.length ); styleStr = styleStr + "display:block;"; }else{ var blkString = styleStr.match( /display:.*?block;/g ); var blkPos = blkString ? styleStr.indexOf( blkString ) : -1; if( blkPos >= 0 ) { styleStr = styleStr.substring( 0, blkPos ) + styleStr.substring( blkPos + blkString.length, styleStr.length ); } styleStr = styleStr + "display:none;"; } if( styleStr ) { if( window.document.documentElement.getAttribute("style") == window.document.documentElement.style ) { targetTagID.style.cssText = styleStr; }else{ targetTagID.setAttribute( "style", styleStr); }}}</script>';
-
-			foreach( $twitters as $tw ) {
-				if( strlen( $tw->in_reply_to_screen_name ) ) {
-					if( $displayReply ) {
-						$local_counter++;
-						$output .= '<li>';
-						$output .= '@';
-						$output .= $tw->in_reply_to_screen_name;
-						$output .= '<br />';
-						$output .= widget_twitter_vjck_modify_contents( substr( $tw->text, strpos( $tw->text, ' ' ) + 1 ), $displayImage, $image_on );
-						if( $displayTime || $displaySource ) {
-							$output .= $dispTimeSourceStartTag;
-							if( $displayTime ) {
-								$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) + $tw->user->utc_offset[0] );		// 0.1.4 modified -> 0.1.8 fixed
-								if( $displaySource ) { $output .= ' by '; }
-							} /* if */
-							if( $displaySource ) { $output .= str_replace( 'href', 'target="_blank" href', $tw->source); }
-							$output .= '</div>';
-						} /* if */
-						$output .= '</li>';
-					} /* if */
-				}else{
-					$local_counter++;
-					$output .= '<li>';
-					$output .= widget_twitter_vjck_modify_contents( $tw->text , $displayImage, $image_on );
-					if( $displayTime || $displaySource ) {
-						$output .= $dispTimeSourceStartTag;
-						if( $displayTime ) {
-							$output .= date( $displayTimeFormat, strtotime( $tw->created_at ) + $tw->user->utc_offset[0] );		// 0.1.4 modified -> 0.1.8 fixed
-							if( $displaySource ) { $output .= ' '; }
-						} /* if */
-						if( $displaySource ) {
-							$output .= 'by ';
-							$output .= str_replace( 'href', 'target="_blank" href', $tw->source);
-						} /* if */
-						$output .= '</div>';
-					} /* if */
-					$output .= '</li>';
-				} /* if else */
-//				$output .= '<div clear="both" style="margin-bottom:8px;" ></div>';
-				if( $local_counter >= $_twitterCount ) break;
-			} /* foreach */
-			$output .= '</div>';
-
-			$output .= '</ul></div>';
-
-			$options['widget_twitter_vjck_option_cached_time'] = time();
-			$options['widget_twitter_vjck_option_cached_output'] = $output;
-			update_option('widget_twitter_vjck', $options);
 		}else{
-			$output = $options['widget_twitter_vjck_option_cached_output'];
-			$output .= '<!-- cached -->';
-
-//	$output .= '<div id="twitter_profile" >';
-//	$output .= 'A: Server is busy.<br />B: No entries.<br />C: Do not want to display.<br /><span style="font-size:7pt;color:#888;">- plz wait a while and try again -</span>';
-//	$output .= '</div>';
+			$output .= '<!-- error verify credentials: ' . $code . '-->';
+			$tweets_cache = get_option( W_TWITTER_CACHE );
+			if( $tweets_cache ) $tweet = json_decode( urldecode( $tweets_cache ), true );
 		} /* if else */
 
-		// These lines generate the output
 
 
-//echo '<script type="text/javascript" src="' . get_option('siteurl') . '/wp-content/plugins/twitter/widget_twitter_vjck.js" ></script>';
-		echo $before_widget . $before_title . $title . $after_title;
+
+		/* profile section */
+
+		$user = $tweet[ 0 ][ 'user' ];
+
+		$output .= '<div class="w_tweet_tweet_profile_wrap" >';
+
+			$output .= '<div class="w_tweet_tweet_profile_icon" >';
+				$output .= '<a href="https://twitter.com/' . $user[ 'screen_name' ] . '" target="_blank" >';
+					$output .= '<img src="' . $user[ 'profile_image_url' ] . '" border="0" />';
+				$output .= '</a>';
+			$output .= '</div>';
+
+			$output .= '<div class="w_tweet_tweet_profile_text_wrap" >';
+
+				$output .= '<div class="w_tweet_tweet_profile_username" >';
+					$output .= '<a href="https://twitter.com/' . $user[ 'screen_name' ] . '" target="_blank" >' . $user[ 'name' ] . '</a>';
+				$output .= '</div>';
+
+				$output .= '<div class="w_tweet_tweet_profile_location" >';
+					$output .= $user[ 'location' ];
+				$output .= '</div>';
+
+				$output .= '<div class="w_tweet_tweet_profile_description" >';
+					$output .= $user[ 'description' ];
+				$output .= '</div>';
+
+			$output .= '</div>';
+
+			$output .= '<div class="w_tweet_tweet_profile_meta_wrap" >';
+
+				$output .= '<div class="w_tweet_tweet_profile_meta" >';
+					$output .= 'since ' . date( 'F Y', strtotime( $user[ 'created_at' ] ) ) . '<br />';
+					$output .= $user[ 'followers_count' ] . ' followers, ' . $user[ 'friends_count' ] . ' friends, ' . $user[ 'statuses_count' ] . ' tweets';
+				$output .= '</div>';
+
+			$output .= '</div>';
+
+		$output .= '</div> <!-- w_tweet_tweet_profile_wrap -->';
+
+
+		/* tweets section */
+
+		$disp_cc = $op_max_display;
+		foreach( $tweet as $t ) {
+			$tweet_text = $t[ 'text' ];
+			if( mb_strpos( $tweet_text, '@' ) === 0 && $op_exclude_reply ) continue;
+
+			/* embeded urls to link */
+			$urls = $t[ 'entities' ][ 'urls' ];
+			if( count( $urls ) > 0 ) {
+				foreach( $urls as $u ) {
+					$pattern = '/' . urlencode( $u[ 'url' ] ) . '/s';
+					$replacement = '<a href="' . $u[ 'expanded_url' ] . '" target="_blank" >' . $u[ 'expanded_url' ] . '</a>';
+					$tweet_text = preg_replace( $pattern, $replacement, urlencode( $tweet_text ) );
+					$tweet_text = urldecode( $tweet_text );
+				} /* foreach */
+			} /* if */
+
+			/* hashtags */
+			$hashtags = $t[ 'entities' ][ 'hashtags' ];
+			if( count( $hashtags ) > 0 ) {
+				foreach( $hashtags as $h ) {
+					$pattern = '/#' . $h[ 'text' ] . '/s';
+					$url = 'https://twitter.com/search/realtime?q=%23' . urlencode( $h[ 'text' ] ) . '&src=hash';
+					$replacement = '<a href="' . $url . '" target="_blank" >#' . $h[ 'text' ] . '</a>';
+					$tweet_text = preg_replace( $pattern, $replacement, $tweet_text );
+				} /* foreach */
+			} /* if */
+
+			/* photo */
+			$media = $t[ 'entities' ][ 'media' ];
+			if( count( $media ) > 0 ) {
+				$disp_photo_flag = true;
+				foreach( $media as $m ) {
+					$pattern = '/' . urlencode( $m[ 'url' ] ) . '/s';
+					$replacement = '<a href="' . $m[ 'url' ] . '" target="_blank" >' . $m[ 'display_url' ] . '</a>';
+					$tweet_text = preg_replace( $pattern, $replacement, urlencode( $tweet_text ) );
+					$tweet_text = urldecode( $tweet_text );
+
+					if( $m[ 'type' ] == 'photo' && $disp_photo_flag ) {
+
+						$img_box_max = $new_width = $new_height = 100;
+						$img_width = $m[ 'sizes' ][ 'small' ][ 'w' ];
+						$img_height = $m[ 'sizes' ][ 'small' ][ 'h' ];
+
+						if( $img_width > $img_height ) {
+							$new_height = floor( $img_height * $new_width / $img_width );
+							$img_offset = floor( ( $img_box_max - $new_height ) / 2 );
+							$img_style = ' style="margin-top:' . $img_offset . 'px;" ';
+						}else if( $img_width < $img_height ) {
+							$new_width = floor( $img_width * $new_height / $img_height );
+							$img_offset = floor( ( $img_box_max - $new_width ) / 2 );
+							$img_style = ' style="margin-left:' . $img_offset . 'px;" ';
+						}else{
+							$img_style = "";
+						} /* if elseif else */
+
+						$img_tag_str = '<div class="w_tweet_tweet_photobox" >';
+						$img_tag_str .= '<a href="' . $m[ 'url' ] . '" target="_blank" >';
+						$img_tag_str .= '<img src="' . $m[ 'media_url' ] . '" border="0" width="' . $new_width . 'px" height="' . $new_height . 'px" />';
+						$img_tag_str .= '</a>';
+						$img_tag_str .= '</div>';
+						$endline_clear = '<br clear="all" />';
+						$tweet_text = $img_tag_str . $tweet_text . $endline_clear;
+
+						$disp_photo_flag = false;
+					} /* if */
+
+				} /* foreach */
+			} /* if */
+
+			$output .= '<div class="w_tweet_tweet_wrap" >';
+				$output .= '<div class="w_tweet_tweet_text" >';
+					$output .= $tweet_text;
+				$output .= '</div>';
+
+				$output .= '<div class="w_tweet_tweet_time_tweet" >';
+					$local_time = strtotime( $t[ 'created_at' ] ) + ( $op_timezone_offset * 3600 );
+					$output .= date( $op_time_format, $local_time );
+				$output .= '</div>';
+
+				$output .= '<div class="w_tweet_tweet_source" >';
+					$output .= $t[ 'source' ];
+				$output .= '</div>';
+
+			$output .= '</div> <!-- w_tweet_tweet_wrap -->';
+
+			if( --$disp_cc <= 0 ) break;
+		} /* foreach */
+
+
+
+		/* status section */
+
+		$output .= '<div class="w_tweet_tweet_status" >';
+			$output .= 'Twitter REST API 1.1 - ';
+			if( $code == 200 ) {
+				$output .= 'status OK';
+			} else {
+				$output .= 'status cache - #' . $code . '';
+			} /* if else */
+		$output .= '</div>';
+
+
+		echo $before_widget . $before_title . $op_widget_title . $after_title;
 		echo $output;
 		echo $after_widget;
 	} /* widget_twitter_vjck() */
 
 
+
 	function widget_twitter_vjck_control() {
-		$options = $newoptions = get_option('widget_twitter_vjck');
-		if ( $_POST["widget_twitter_vjck_submit"] ) {
-			$newoptions['widget_twitter_vjck_title'] = strip_tags(stripslashes($_POST["widget_twitter_vjck_title"]));
-			$newoptions['widget_twitter_vjck_option_userid'] = $_POST["widget_twitter_vjck_option_userid"];
-			$newoptions['widget_twitter_vjck_option_maxcount'] = (int) $_POST["widget_twitter_vjck_option_maxcount"];
-			$newoptions['widget_twitter_vjck_option_displayProfile'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfile"];
-			$newoptions['widget_twitter_vjck_option_displayProfileImg'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfileImg"];
-			$newoptions['widget_twitter_vjck_option_displayProfileLoc'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfileLoc"];
-			$newoptions['widget_twitter_vjck_option_displayProfileDesc'] = (boolean)$_POST["widget_twitter_vjck_option_displayProfileDesc"];
-			$newoptions['widget_twitter_vjck_option_displayImage'] = (boolean)$_POST["widget_twitter_vjck_option_displayImage"];
-			$newoptions['widget_twitter_vjck_option_image_on'] = (boolean)$_POST["widget_twitter_vjck_option_image_on"];		// added 0.1.5
-			$newoptions['widget_twitter_vjck_option_displayReply'] = (boolean)$_POST["widget_twitter_vjck_option_displayReply"];
-			$newoptions['widget_twitter_vjck_option_displayTime'] = (boolean)$_POST["widget_twitter_vjck_option_displayTime"];
-			$newoptions['widget_twitter_vjck_option_displaySource'] = (boolean)$_POST["widget_twitter_vjck_option_displaySource"];
-			$newoptions['widget_twitter_vjck_option_displayTimeFormat'] = $_POST["widget_twitter_vjck_option_displayTimeFormat"];		// 0.1.4 added
+		$options = $newoptions = get_option( W_TWITTER_OPTION );
 
-			$newoptions['widget_twitter_vjck_option_cached_time'] = 0;
-			$newoptions['widget_twitter_vjck_option_cached_output'] = "";
-		}
-		if ( $options != $newoptions ) {
+		if( $_POST["widget_twitter_vjck_submit"] ) {
+			$newoptions[ 'op_widget_title' ]		= $_POST[ 'op_widget_title' ];
+			$newoptions[ 'op_timezone_offset' ]		= (int)$_POST[ 'op_timezone_offset' ];
+			$newoptions[ 'op_time_format' ]			= $_POST[ 'op_time_format' ];
+			$newoptions[ 'op_exclude_reply' ]		= (boolean)$_POST[ 'op_exclude_reply' ];
+			$newoptions[ 'op_max_display' ]			= (int)$_POST[ 'op_max_display' ];
+
+			$newoptions[ 'op_consumer_key' ]		= $_POST[ 'op_consumer_key' ];
+			$newoptions[ 'op_consumer_secret' ]		= $_POST[ 'op_consumer_secret' ];
+			$newoptions[ 'op_access_token' ]		= $_POST[ 'op_access_token' ];
+			$newoptions[ 'op_access_secret' ]		= $_POST[ 'op_access_secret' ];
+		} /* if */
+		if( $options != $newoptions ) {
 			$options = $newoptions;
-			update_option('widget_twitter_vjck', $options);
-		}
+			update_option( W_TWITTER_OPTION, $options );
+		} /* if */
 
-		// those are default value
-		if( !$options['widget_twitter_vjck_title'] ) $options['widget_twitter_vjck_title'] = "Twitter";
-		if( !$options['widget_twitter_vjck_option_userid'] ) $options['widget_twitter_vjck_option_userid'] = "12345";
-		if( !$options['widget_twitter_vjck_option_displayTimeFormat'] ) $options['widget_twitter_vjck_option_displayTimeFormat'] = "Y/m/d H:s";		// 0.1.4 added
+		/* value check and defaults */
+		$op_widget_title = $options[ 'op_widget_title' ] ? $options[ 'op_widget_title' ] : 'Twitter';
+		$op_timezone_offset = $options[ 'op_timezone_offset' ] ? $options[ 'op_timezone_offset' ] : 9;
+		$op_time_format = $options[ 'op_time_format' ] ? $options[ 'op_time_format' ] : 'M j Y - G:i';
+		$op_exclude_reply = $options[ 'op_exclude_reply' ] ? true : false;
+		$op_max_display = $options[ 'op_max_display' ] ? $options[ 'op_max_display' ] : 10;
 
-		$_twitterUserID = $options['widget_twitter_vjck_option_userid'];
-		$_twitterCount = $options['widget_twitter_vjck_option_maxcount'];
-		$displayProfile = $options['widget_twitter_vjck_option_displayProfile'];
-		$displayProfileImg = $options['widget_twitter_vjck_option_displayProfileImg'];
-		$displayLocation = $options['widget_twitter_vjck_option_displayProfileLoc'];;
-		$displayDescription = $options['widget_twitter_vjck_option_displayProfileDesc'];
-		$displayImage = $options['widget_twitter_vjck_option_displayImage'];
+		$op_consumer_key = $options[ 'op_consumer_key' ];
+		$op_consumer_secret = $options[ 'op_consumer_secret' ];
+		$op_access_token = $options[ 'op_access_token' ];
+		$op_access_secret = $options[ 'op_access_secret' ];
 
-		$image_on = $options['widget_twitter_vjck_option_image_on'];	// added 0.1.5
-
-
-		$displayReply = $options['widget_twitter_vjck_option_displayReply'];
-		$displayTime = $options['widget_twitter_vjck_option_displayTime'];
-		$displaySource = $options['widget_twitter_vjck_option_displaySource'];
-		$displayTimeFormat = $options['widget_twitter_vjck_option_displayTimeFormat'];		// 0.1.4 added
-
-//		$widget_twitter_vjck_option_cached_time = $options['widget_twitter_vjck_option_cached_time'];
-//		$widget_twitter_vjck_option_cached_output = $options['widget_twitter_vjck_option_cached_output'];
-
-		$title = htmlspecialchars($options['widget_twitter_vjck_title'], ENT_QUOTES);
 ?>
+		<p><?php _e('Widget Title:'); ?> <input style="width: 220px;" id="op_widget_title" name="op_widget_title" type="text" value="<?php echo $op_widget_title; ?>" /></p>
+		<p><?php _e('Timezone Offset: (hours)'); ?> <input style="width: 220px;" id="op_timezone_offset" name="op_timezone_offset" type="text" value="<?php echo $op_timezone_offset; ?>"</p>
+		<p><?php _e('Date time format:'); ?> <input style="width: 220px;" id="op_time_format" name="op_time_format" type="text" value="<?php echo $op_time_format; ?>" /></p>
+		<p><input id="op_exclude_reply" name="op_exclude_reply" type="checkbox" value="1" <?php if( $op_exclude_reply ) echo 'checked';?>/> <?php _e('Exclude reply'); ?></p>
+		<p><?php _e('Number of display: (max 20)'); ?> <input style="width: 220px;" id="op_max_display" name="op_max_display" type="text" value="<?php echo $op_max_display; ?>" /></p>
+		<p>---</p>
 
-	    <?php _e('Title:'); ?> <input style="width: 170px;" id="widget_twitter_vjck_title" name="widget_twitter_vjck_title" type="text" value="<?php echo $title; ?>" /><br />
-	    <?php _e('Twitter ID:'); ?> <input style="width: 150px;" id="widget_twitter_vjck_option_userid" name="widget_twitter_vjck_option_userid" type="text" value="<?php echo $_twitterUserID; ?>" /><br />
-        <?php _e('Max tweets:'); ?> <input style="width: 75px;" id="widget_twitter_vjck_option_maxcount" name="widget_twitter_vjck_option_maxcount" type="text" value="<?php echo $_twitterCount; ?>" /><br />
-
-        <?php _e('Profile:'); ?> <input id="widget_twitter_vjck_option_displayProfile" name="widget_twitter_vjck_option_displayProfile" type="checkbox" value="1" <?php if( $displayProfile ) echo 'checked';?>/><br />
-        &nbsp;&nbsp;<?php _e('Profile Image:'); ?> <input id="widget_twitter_vjck_option_displayProfileImg" name="widget_twitter_vjck_option_displayProfileImg" type="checkbox" value="1" <?php if( $displayProfileImg ) echo 'checked';?>/><br />
-        &nbsp;&nbsp;<?php _e('Location:'); ?> <input id="widget_twitter_vjck_option_displayProfileLoc" name="widget_twitter_vjck_option_displayProfileLoc" type="checkbox" value="1" <?php if( $displayLocation ) echo 'checked';?>/><br />
-        &nbsp;&nbsp;<?php _e('Description:'); ?> <input id="widget_twitter_vjck_option_displayProfileDesc" name="widget_twitter_vjck_option_displayProfileDesc" type="checkbox" value="1" <?php if( $displayDescription ) echo 'checked';?>/><br />
-        <?php _e('Display image:'); ?> <input id="widget_twitter_vjck_option_displayImage" name="widget_twitter_vjck_option_displayImage" type="checkbox" value="1" <?php if( $displayImage ) echo 'checked';?>/><br />
-
-		&nbsp;&nbsp;<?php _e('Display image when loaded:'); ?> <input id="widget_twitter_vjck_option_image_on" name="widget_twitter_vjck_option_image_on" type="checkbox" value="1" <?php if( $image_on ) echo 'checked';?>/><br />
-
-		<?php _e('Display reply:'); ?> <input id="widget_twitter_vjck_option_displayReply" name="widget_twitter_vjck_option_displayReply" type="checkbox" value="1" <?php if( $displayReply ) echo 'checked';?>/><br />
-        <?php _e('Display time:'); ?> <input id="widget_twitter_vjck_option_displayTime" name="widget_twitter_vjck_option_displayTime" type="checkbox" value="1" <?php if( $displayTime ) echo 'checked';?>/><br />
-	    <?php _e('Time Format:'); ?> <input style="width: 100px;" id="widget_twitter_vjck_option_displayTimeFormat" name="widget_twitter_vjck_option_displayTimeFormat" type="text" value="<?php echo $displayTimeFormat; ?>" /><br />
-		
-        <?php _e('Display source:'); ?> <input id="widget_twitter_vjck_option_displaySource" name="widget_twitter_vjck_option_displaySource" type="checkbox" value="1" <?php if( $displaySource ) echo 'checked';?>/><br />
-
+		<p><?php _e('Consumer Key:'); ?> <input style="width: 220px;" id="op_consumer_key" name="op_consumer_key" type="text" value="<?php echo $op_consumer_key; ?>" /></p>
+		<p><?php _e('Consumer Secret:'); ?> <input style="width: 220px;" id="op_consumer_secret" name="op_consumer_secret" type="text" value="<?php echo $op_consumer_secret; ?>" /></p>
+		<p><?php _e('Access Token:'); ?> <input style="width: 220px;" id="op_access_token" name="op_access_token" type="text" value="<?php echo $op_access_token; ?>" /></p>
+		<p><?php _e('Access Secret:'); ?> <input style="width: 220px;" id="op_access_secret" name="op_access_secret" type="text" value="<?php echo $op_access_secret; ?>" /></p>
 
   	    <input type="hidden" id="widget_twitter_vjck_submit" name="widget_twitter_vjck_submit" value="1" />
+
 
 <?php
 	} /* widget_twitter_vjck_control() */
 
-	register_sidebar_widget('Twitter VJCK', 'widget_twitter_vjck');
-	register_widget_control('Twitter VJCK', 'widget_twitter_vjck_control' );
+
+
+
+	register_sidebar_widget( 'Twitter VJCK', 'widget_twitter_vjck' );
+	register_widget_control( 'Twitter VJCK', 'widget_twitter_vjck_control' );
 } /* widget_twitter_vjck_init() */
 
-add_action('plugins_loaded', 'widget_twitter_vjck_init');
+add_action( 'plugins_loaded', 'widget_twitter_vjck_init' );
+
+
+
+
+
+
+
+
+
+
 
 ?>
