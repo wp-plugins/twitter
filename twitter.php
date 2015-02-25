@@ -1,4 +1,20 @@
 <?php
+/**
+ * @package twitter
+ * @version 1.0.0
+ */
+/*
+Plugin Name: Twitter
+Plugin URI:  http://wordpress.org/plugins/twitter/
+Description: Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter.
+Version:     1.0.0
+Author:      Twitter
+Author URI:  https://dev.twitter.com/
+License:     MIT
+Text Domain: twitter
+Domain Path: /languages/
+*/
+
 /*
 The MIT License (MIT)
 
@@ -21,21 +37,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-*/
-/**
- * @package twitter
- * @version 1.0.0
- */
-/*
-Plugin Name: Twitter
-Plugin URI:  http://wordpress.org/plugins/twitter/
-Description: Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter.
-Version:     1.0.0
-Author:      Twitter
-Author URI:  https://dev.twitter.com/
-License:     MIT
-Text Domain: twitter
-Domain Path: /languages/
 */
 
 
