@@ -5,12 +5,12 @@
  */
 /*
 Plugin Name: Twitter
-Plugin URI:  http://wordpress.org/plugins/twitter/
+Plugin URI: http://wordpress.org/plugins/twitter/
 Description: Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter.
-Version:     1.0.0
-Author:      Twitter
-Author URI:  https://dev.twitter.com/
-License:     MIT
+Version: 1.0.0
+Author: Twitter
+Author URI: https://dev.twitter.com/
+License: MIT
 Text Domain: twitter
 Domain Path: /languages/
 */
