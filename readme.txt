@@ -7,7 +7,7 @@ Stable tag: 1.0.0
 License: MIT
 License URI: http://opensource.org/licenses/MIT
 
-Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter. Requires PHP 5.4+ or newer.
+Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter. Requires PHP 5.4 or newer.
 
 == Description ==
 
