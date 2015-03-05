@@ -1,20 +1,4 @@
 <?php
-/**
- * @package twitter
- * @version 1.0.0
- */
-/*
-Plugin Name: Twitter
-Plugin URI: http://wordpress.org/plugins/twitter/
-Description: Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter. Requires PHP 5.4 or newer.
-Version: 1.0.0
-Author: Twitter
-Author URI: https://dev.twitter.com/
-License: MIT
-Text Domain: twitter
-Domain Path: /languages/
-*/
-
 /*
 The MIT License (MIT)
 
@@ -38,7 +22,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/**
+ * @package twitter
+ * @version 1.0.1
+ */
+/*
+Plugin Name: Twitter
+Plugin URI:  http://wordpress.org/plugins/twitter/
+Description: Official Twitter plugin for WordPress. Embed Twitter content and grow your audience on Twitter. Requires PHP 5.4 or greater.
+Version:     1.0.1
+Author:      Twitter
+Author URI:  https://dev.twitter.com/
+License:     MIT
+Text Domain: twitter
+Domain Path: /languages/
+*/
 
 // make sure the plugin does not expose any info if called directly
 if ( ! function_exists( 'add_action' ) ) {
@@ -52,9 +50,16 @@ if ( ! function_exists( 'add_action' ) ) {
 	exit( 'Hi there! I am a WordPress plugin requiring functions included with WordPress. I am not meant to be addressed directly.' );
 }
 
-// plugin requires PHP 5.4 or newer
+// plugin requires PHP 5.4 or greater
 if ( version_compare( PHP_VERSION, '5.4.0', '<' ) ) {
-	trigger_error( 'The Twitter plugin for WordPress requires PHP version 5.4 or higher.' );
+	if ( ! class_exists( 'Twitter_CompatibilityNotice' ) ) {
+		require_once( dirname(__FILE__) . '/compatibility-notice.php' );
+	}
+
+	// possibly display a notice, trigger error
+	add_action( 'admin_init', array( 'Twitter_CompatibilityNotice', 'adminInit' ) );
+
+	// stop execution of this file
 	return;
 }
 
@@ -64,7 +69,7 @@ require_once( dirname( __FILE__ ) . '/autoload.php' );
 // initialize on plugins loaded
 add_action(
 	'plugins_loaded',
-	array( '\\Twitter\\WordPress\\PluginLoader', 'init' ),
+	array( '\Twitter\WordPress\PluginLoader', 'init' ),
 	0, // priority
 	0 // expected arguments
 );
