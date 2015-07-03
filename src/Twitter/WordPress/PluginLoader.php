@@ -41,7 +41,7 @@ class PluginLoader
 	 *
 	 * @type string
 	 */
-	const VERSION = '1.0.1';
+	const VERSION = '1.1.0';
 
 	/**
 	 * Unique domain of the plugin's translated text
@@ -78,10 +78,12 @@ class PluginLoader
 			add_action( 'init', array( __CLASS__, 'adminInit' ) );
 		} else {
 			// hooks to be executed on general execution of WordPress such as public pageviews
-			static::registerShortcodeHandlers();
 			add_action( 'init', array( __CLASS__, 'publicInit' ) );
 			add_action( 'wp_head', array( __CLASS__, 'wpHead' ), 1, 0 );
 		}
+
+		// shortcodes
+		static::registerShortcodeHandlers();
 	}
 
 	/**
